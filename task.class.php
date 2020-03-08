@@ -28,20 +28,112 @@ class Task {
     }
     protected function getUniqueId() {
         // Assignment: Code to get new unique ID
-        return -1; // Placeholder return for now
+        return uniqid("", true); // Placeholder return for now
     }
     protected function LoadFromId($Id = null) {
         if ($Id) {
             // Assignment: Code to load details here...
+
+            foreach( $this->TaskDataSource as $utask ){ 
+
+                if($utask->TaskId == $id){
+
+                    $this->TaskId = $this->TaskDataSource[$Id]->TaskId;
+                    $this->TaskName = $this->TaskDataSource[$Id]->TaskName;
+                    $this->TaskDescription = $this->TaskDataSource[$Id]->TaskDescription;
+                    break;
+                }
+            }
+
         } else
             return null;
     }
 
-    public function Save() {
+    //public function Save($tmode, $task_info) {
+    public function Save($tmode, $taskname, $taskdesc, $taskid = "") {
         //Assignment: Code to save task here
+        
+        $this->TaskDataSource = file_get_contents('Task_Data.txt');
+
+        if (strlen($this->TaskDataSource) > 0){
+            $this->TaskDataSource = json_decode($this->TaskDataSource); 
+        }
+        else{
+            $this->TaskDataSource = array();
+        }
+
+        if ($tmode == 'new') {
+            $this->Create();         
+        }
+
+        $this->TaskName = $taskname;
+        $this->TaskDescription = $taskdesc;
+
+        if($tmode == 'new'){
+                        
+            $task = new stdClass();
+            $task->TaskId = $this->TaskId;
+            $task->TaskName = $this->TaskName;
+            $task->TaskDescription = $this->TaskDescription;
+
+            array_push($this->TaskDataSource, $task);  
+            
+        }
+
+        if ($tmode == 'edit') {
+
+            foreach( $this->TaskDataSource as $currenttask ){ 
+
+                if($currenttask->TaskId == $taskid){
+                    $currenttask->TaskName = $this->TaskName;
+                    $currenttask->TaskDescription = $this->TaskDescription;
+                    break;
+                }
+            }
+        }   
+        
+        $this->update_json();
+
     }
-    public function Delete() {
+    protected function update_json(){
+
+        file_put_contents('Task_Data.txt', json_encode($this->TaskDataSource, JSON_PRETTY_PRINT));
+    }
+    public function Delete($taskid) {
         //Assignment: Code to delete task here
+        $this->TaskDataSource = array();
+        $this->TaskDataSource = file_get_contents('Task_Data.txt');
+
+        if (strlen($this->TaskDataSource) > 0){
+            $this->TaskDataSource = json_decode($this->TaskDataSource); 
+        }
+        else{
+            return;
+        }
+
+        $task_deleted = false;
+
+        foreach( $this->TaskDataSource as $key => $utask ){ 
+
+            if($utask->TaskId == $taskid){
+
+                $task_deleted = true;
+                unset($this->TaskDataSource[$key]);
+                break;
+            }
+        }        
+
+        if($task_deleted == true){
+
+            //https://www.php.net/manual/en/function.json-encode.php#94157
+            $temp_arr = array();
+            $temp_arr = array_values($this->TaskDataSource);
+            $this->TaskDataSource = $temp_arr;
+
+            $this->update_json();
+        }
+        
     }
 }
+
 ?>

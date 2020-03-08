@@ -84,19 +84,56 @@
             $('#deleteTask').show();
             currentTaskId = triggerElement.attr("id");
             console.log('Task ID: '+triggerElement.attr("id"));
+
+            $("#InputTaskName").val(triggerElement.children("h4").text());     
+            $("#InputTaskDescription").val(triggerElement.children("p").text());
+
         }
     });
     $('#saveTask').click(function() {
         //Assignment: Implement this functionality
         alert('Save... Id:'+currentTaskId);
-        $('#myModal').modal('hide');
-        updateTaskList();
+        //Check if new task
+        var mode = "";
+           
+        if(currentTaskId == -1){
+            mode = "new";
+        }
+        else{
+            mode = "edit";
+        }
+        
+        $.post("update_task.php",
+        {
+            "TaskId" : currentTaskId,
+            "mode" : mode,
+            "InputTaskName" : $("#InputTaskName").val(),
+            "InputTaskDescription" : $("#InputTaskDescription").val()
+        },
+        function( data ) {
+            console.log(data);
+            $('#myModal').modal('hide');
+            updateTaskList();
+        });
+        
     });
     $('#deleteTask').click(function() {
         //Assignment: Implement this functionality
+
+        var task = {
+            "TaskId" : currentTaskId,
+            "mode" : "del"
+        };
+
         alert('Delete... Id:'+currentTaskId);
-        $('#myModal').modal('hide');
-        updateTaskList();
+
+        $.post("update_task.php",     
+        task,
+        function( data ) {        
+            $('#myModal').modal('hide');
+            updateTaskList();
+        });
+        
     });
     function updateTaskList() {
         $.post("list_tasks.php", function( data ) {
